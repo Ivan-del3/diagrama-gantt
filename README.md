@@ -6,9 +6,10 @@ Este proyecto está pensado como una herramienta mínima para **planificar tarea
 
 
 🌐 Demo (GitHub Pages):  
-
+https://ivan-del3.github.io/diagrama-gantt/
 
 Repositorio:  
+https://github.com/Ivan-del3/diagrama-gantt
 
 
 
