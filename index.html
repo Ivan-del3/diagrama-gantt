@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+
+<style>
+/* ====== Base & Variables ====== */
+:root {
+  --primary: #4F46E5;       /* Azul índigo moderno */
+  --primary-hover: #4338CA;
+  --secondary: #F3F4F6;     /* Gris muy claro para fondos */
+  --text-main: #111827;     /* Casi negro para texto principal */
+  --text-muted: #6B7280;    /* Gris para texto secundario */
+  --border-color: #E5E7EB;  /* Gris suave para líneas */
+  --bg-page: #F9FAFB;
+  --bg-card: #FFFFFF;
+  
+  /* Colores de selección */
+  --active-row: #EEF2FF;    /* Fondo azul muy suave */
+  --active-col: #E0E7FF;    /* Fondo azul suave un poco más oscuro */
+  
+  /* Gantt Bar */
+  --gantt-bar: linear-gradient(90deg, #4F46E5 0%, #6366F1 100%);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  padding: 2rem;
+  line-height: 1.5;
+}
+
+/* ====== Contenedor Principal (Lo más ancho posible) ====== */
+.wrap {
+  width: 98vw;
+  max-width: 1800px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* ====== Cabecera (Branding) ====== */
+.brand {
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--secondary);
+  padding-bottom: 1rem;
+}
+
+.brand h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.025em;
+  margin-bottom: 0.25rem;
+}
+
+.brand .sub {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ====== Barra de Herramientas (Toolbar) ====== */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background: var(--secondary);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+button:hover {
+  background: var(--bg-page);
+  border-color: #D1D5DB;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Botón destacado para Descargar */
+#btnDownload {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+#btnDownload:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.sep {
+  width: 2px;
+  height: 24px;
+  background: var(--border-color);
+  margin: 0 0.5rem;
+}
+
+/* ====== Tabla de Gantt ====== */
+.tablebox {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow-x: auto; /* Permite scroll horizontal si es muy ancha */
+  background: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  min-width: 800px; /* Evita que se aplaste demasiado */
+}
+
+th, td {
+  padding: 0.875rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
+}
+
+/* Primera columna (Tareas) siempre alineada a la izquierda y un poco más ancha */
+th:first-child, td:first-child {
+  text-align: left;
+  min-width: 200px;
+  max-width: 300px;
+  position: sticky; /* Se queda fija si haces scroll horizontal */
+  left: 0;
+  background: inherit; /* Hereda el fondo para tapar las celdas al hacer scroll */
+  z-index: 10;
+  border-right: 2px solid var(--border-color); /* Separador más fuerte para la columna fija */
+}
+
+th:last-child, td:last-child {
+  border-right: none;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* Cabeceras */
+thead th {
+  background: var(--secondary);
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  user-select: none;
+}
+
+thead th:first-child {
+  background: var(--secondary);
+  z-index: 11; /* Para que quede por encima de la columna de tareas al hacer scroll */
+}
+
+tbody td {
+  background: var(--bg-card);
+  font-size: 0.95rem;
+  cursor: pointer; /* ¡Cruz eliminada! Ahora sale la manita normal */
+}
+
+/* Campos editables */
+[contenteditable="true"] {
+  outline: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  margin: -0.25rem -0.5rem; /* Para que el padding no desajuste la tabla */
+  transition: background 0.2s;
+}
+
+[contenteditable="true"]:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+[contenteditable="true"]:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* ====== Estados Activos (Selección) ====== */
+.active-row td {
+  background: var(--active-row) !important;
+}
+
+.active-col {
+  background: var(--active-col) !important;
+}
+
+thead th.active-col {
+  background: var(--primary) !important;
+  color: white;
+}
+
+.active-row td:first-child {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* ====== Bloque del Diagrama (La barra de tarea) ====== */
+.ocupado {
+  height: 24px;
+  background: var(--gantt-bar);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+  margin: 0 auto;
+  width: 90%; /* No ocupa toda la celda para que respire */
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ====== Footer / Pistas ====== */
+.hint {
+  margin-top: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  background: var(--secondary);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8em;
+  color: var(--text-main);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <h1>DIAGRAMA DE GANTT</h1>
+    <div class="sub">Click en un encabezado para activar columna · Click en una tarea para activar fila</div>
+  </div>
+
+<div class="toolbar">
+    <button id="btnUndo" style="background: #fff1f1; border-color: #fecaca;">↩ Deshacer</button>
+    <span class="sep"></span>
+    <button id="btnDownload">Descargar HTML</button>
+    <span class="sep"></span>
+    <button id="btnAddCol">+ Semana</button>
+    <button id="btnDelCol">- Semana (activa)</button>
+    <span class="sep"></span>
+    <button id="btnAddRow">+ Tarea</button>
+    <button id="btnDelRow">- Tarea (activa)</button>
+</div>
+
+  <div class="tablebox">
+    <table id="gantt">
+      <thead>
+        <tr>
+          <th>Tarea</th>
+          <th contenteditable="true">Semana 1</th>
+          <th contenteditable="true">Semana 2</th>
+          <th contenteditable="true">Semana 3</th>
+          <th contenteditable="true">Semana 4</th>
+          <th contenteditable="true">Semana 5</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td contenteditable="true">Tarea 1</td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+
+        <tr>
+          <td contenteditable="true">Tarea 2</td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+
+        <tr>
+          <td contenteditable="true">Tarea 3</td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="hint">
+    Consejo: puedes editar títulos (semanas) y nombres de tareas. La selección activa se usa para borrar fila/columna.
+  </div>
+
+</div>
+
+<script>
+var tabla = document.getElementById("gantt");
+var theadRow = tabla.tHead.rows[0];
+var tbody = tabla.tBodies[0];
+
+var activeRowIndex = -1;
+var activeColIndex = -1;
+
+// ===== SISTEMA DE HISTORIAL (UNDO) =====
+var historial = [];
+const MAX_PASOS = 50;
+
+function registrarEstado() {
+    // Guardamos una copia del estado actual antes de cambiarlo
+    if (historial.length >= MAX_PASOS) historial.shift(); // Borra el más viejo si hay muchos
+    historial.push({
+        cabecera: theadRow.innerHTML,
+        cuerpo: tbody.innerHTML
+    });
+}
+
+function deshacer() {
+    if (historial.length > 0) {
+        var ultimoEstado = historial.pop();
+        theadRow.innerHTML = ultimoEstado.cabecera;
+        tbody.innerHTML = ultimoEstado.cuerpo;
+        
+        // Tras deshacer, refrescamos todo
+        clearActiveRow();
+        clearActiveCol();
+        engancharClicks();
+        guardarEnLocal(); // Actualizamos el almacenamiento permanente
+    } else {
+        alert("No hay más cambios para deshacer");
+    }
+}
+
+// Atajo de teclado Ctrl + Z
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'z') {
+        deshacer();
+    }
+});
+
+document.getElementById("btnUndo").onclick = deshacer;
+
+// ===== LOCAL STORAGE =====
+function guardarEnLocal() {
+    var datos = {
+        cabecera: theadRow.innerHTML,
+        cuerpo: tbody.innerHTML
+    };
+    localStorage.setItem('gantt_guardado', JSON.stringify(datos));
+}
+
+function cargarDatos() {
+    var datosGuardados = localStorage.getItem('gantt_guardado');
+    if (datosGuardados) {
+        var datos = JSON.parse(datosGuardados);
+        theadRow.innerHTML = datos.cabecera;
+        tbody.innerHTML = datos.cuerpo;
+    }
+}
+
+// Detectar escritura manual y registrar cambio
+tabla.addEventListener('input', function() {
+    registrarEstado();
+    guardarEnLocal();
+});
+
+
+// ===== SELECCIONES Y CLICKS =====
+function clearActiveRow(){
+    for(var r=0;r<tbody.rows.length;r++) tbody.rows[r].classList.remove("active-row");
+}
+function clearActiveCol(){
+    var allCells = tabla.querySelectorAll(".active-col");
+    allCells.forEach(c => c.classList.remove("active-col"));
+}
+
+function setActiveRow(rIndex){
+    activeRowIndex = rIndex;
+    clearActiveRow();
+    if(rIndex >= 0 && rIndex < tbody.rows.length) tbody.rows[rIndex].classList.add("active-row");
+}
+
+function setActiveCol(cIndex){
+    activeColIndex = cIndex;
+    clearActiveCol();
+    if(cIndex >= 0 && cIndex < theadRow.cells.length){
+        theadRow.cells[cIndex].classList.add("active-col");
+        for(var r=0;r<tbody.rows.length;r++){
+            if(tbody.rows[r].cells[cIndex]) tbody.rows[r].cells[cIndex].classList.add("active-col");
+        }
+    }
+}
+
+function engancharClicks(){
+    var celdas = tabla.querySelectorAll("tbody td");
+    celdas.forEach(celda => {
+        celda.onclick = function(){
+            setActiveRow(this.parentNode.rowIndex - 1);
+            if(this.cellIndex != 0) setActiveCol(this.cellIndex);
+
+            if(this.cellIndex == 0) return;
+
+            // Antes de modificar el dibujo, registramos estado para poder deshacer
+            registrarEstado();
+
+            var evento = this.querySelector(".ocupado");
+            if(evento) evento.remove();
+            else {
+                var div = document.createElement("div");
+                div.className = "ocupado";
+                this.appendChild(div);
+            }
+            guardarEnLocal();
+        };
+    });
+
+    tabla.querySelectorAll("thead th").forEach(th => {
+        th.onclick = function(){
+            if(this.cellIndex != 0) setActiveCol(this.cellIndex);
+        };
+    });
+}
+
+// ===== BOTONES DE ACCIÓN =====
+document.getElementById("btnAddCol").onclick = function(){
+    registrarEstado();
+    var th = document.createElement("th");
+    th.contentEditable = "true";
+    th.textContent = "Semana " + (theadRow.cells.length);
+    theadRow.appendChild(th);
+    for(var r=0; r<tbody.rows.length; r++) tbody.rows[r].insertCell(-1);
+    engancharClicks();
+    guardarEnLocal();
+};
+
+document.getElementById("btnDelCol").onclick = function(){
+    if(activeColIndex < 1 || theadRow.cells.length <= 2) return;
+    registrarEstado();
+    theadRow.deleteCell(activeColIndex);
+    for(var r=0; r<tbody.rows.length; r++) tbody.rows[r].deleteCell(activeColIndex);
+    activeColIndex = -1;
+    clearActiveCol();
+    engancharClicks();
+    guardarEnLocal();
+};
+
+document.getElementById("btnAddRow").onclick = function(){
+    registrarEstado();
+    var tr = document.createElement("tr");
+    var td0 = document.createElement("td");
+    td0.contentEditable = "true";
+    td0.textContent = "Tarea " + (tbody.rows.length + 1);
+    tr.appendChild(td0);
+    for(var c=1; c<theadRow.cells.length; c++) tr.appendChild(document.createElement("td"));
+    tbody.appendChild(tr);
+    engancharClicks();
+    guardarEnLocal();
+};
+
+document.getElementById("btnDelRow").onclick = function(){
+    if(activeRowIndex < 0 || tbody.rows.length <= 1) return;
+    registrarEstado();
+    tbody.deleteRow(activeRowIndex);
+    activeRowIndex = -1;
+    clearActiveRow();
+    engancharClicks();
+    guardarEnLocal();
+};
+
+document.getElementById("btnDownload").onclick = function(){
+    clearActiveRow();
+    clearActiveCol();
+    var html = "<!doctype html>\n" + document.documentElement.outerHTML;
+    var blob = new Blob([html], {type:"text/html"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "Gantt-Actualizado.html";
+    a.click();
+};
+
+// Inicio
+cargarDatos();
+engancharClicks();
+</script>
+
+</body>
+</html>
